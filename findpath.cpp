@@ -1,32 +1,48 @@
 #include <iostream>
-#include <vector>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
 class Node {
-	public :
-		int g, f, h;
-		int ix, jy;
-		int wall; //1 if wall
-		int cost;
-		//Only if we need to know path
-		//ommitted parent for this implementation
-		Node *parent;
-		vector<Node> neighbours;
+	public:
+	int g, f, h;
+	int ix, jy;	//position in grid
+	int wall; 	//1 if wall
+	int cost;
+	int nneighbours;
 
-		Node() : ix(-1), jy(-1), g(0), f(0), h(0), wall(-1) {}
-		Node(int i, int j, int w) : ix(i), jy(j), wall(w), g(0), f(0), h(0) {}
+	//Node *parent only if we need to know the exact path taken
+	//ommitted Node *parent for this implementation
+	//Node *parent;
+	vector<Node*> neighbours;
+	//constructors
+	Node() : ix(-1), jy(-1), g(0), f(0), h(0), wall(-1), nneighbours(0) {}
+	Node(int i, int j, int w) : ix(i), jy(j), wall(w), g(0), f(0), h(0), nneighbours(0) {}
 
-		//adds neihbour nodes
-		template <size_t size_x, size_t size_y>
-		void addNeighbours(Node (&nodeset)[size_x][size_y]) {
-			if (ix<size_x-1) neighbours.push_back(nodeset[ix+1][jy]);
-			if (ix>0) neighbours.push_back(nodeset[ix-1][jy]);
-			if (jy<size_y-1) neighbours.push_back(nodeset[ix][jy+1]);
-			if (jy>0) neighbours.push_back(nodeset[ix][jy-1]);
+	//adds neihbour nodes
+	template <size_t size_x, size_t size_y>
+	void addNeighbours(Node (&nodeset)[size_x][size_y]) {
+		if (ix<size_x-1) {
+			neighbours.push_back(&nodeset[ix+1][jy]);
+			nneighbours+=1;
 		}
+		if (ix>0) {
+			neighbours.push_back(&nodeset[ix-1][jy]);
+			nneighbours+=1;
+		}
+		if (jy<size_y-1) {
+			neighbours.push_back(&nodeset[ix][jy+1]);
+			nneighbours+=1;
+		}
+		if (jy>0) {
+			neighbours.push_back(&nodeset[ix][jy-1]);
+			nneighbours+=1;
+		}
+	}
 };
+
+using namespace std;
 
 //find distance from a to b
 int heuristic(Node a, Node b) {
@@ -47,8 +63,8 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 	Node nodeset[size_x][size_y];
 	//Node openset[size_x*size_y];
 	//Node closedset[size_x*size_y];
-	vector<Node> openset;
-	vector<Node> closedset;
+	vector<Node*> openset;
+	vector<Node*> closedset;
 
 	//initialize grid array of nodes
 	for(int i=0; i<size_x; i++) {
@@ -64,8 +80,8 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		}
 	}
 
-	Node start = nodeset[0][0];
-	Node end = nodeset[size_x-1][size_y-1];
+	Node* start = &nodeset[0][0];
+	Node* end = &nodeset[size_x-1][size_y-1];
 
 	openset.push_back(start);
 
@@ -74,73 +90,75 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		int best = 0;
 		for(int i = 0; i < openset.size(); i++) {
 			//node not null
-			if (openset[i].ix > -1) {
-				if (openset.at(i).f < openset.at(best).f) {
+			if (openset[i]->ix > -1) {
+				if (openset.at(i)->f < openset.at(best)->f) {
 					best = i;
 				}
 			}
 		}	
 		
 		//where to start calculating new neighbours
-		Node current = openset.at(best);
+		Node* current = openset.at(best);
 
 		//found shortestpath to end
-		if (current.ix == end.ix && current.jy == end.jy) {
+		if (current->ix == end->ix && current->jy == end->jy) {
 			return 1;
 		}
 
+		//TODO:
+		//POSSIBLE ERROR IN INNER CONDITIONNAL
 		//remove current from openset
 		for(int i = 0; i < openset.size(); i++) {
 			//node not null
-			if (openset.at(i).ix == current.ix && openset.at(i).jy == current.jy) {
-				openset.erase(openset.begin()+5);
+			if (openset.at(i)->ix == current->ix && openset.at(i)->jy == current->jy) {
+				openset.erase(openset.begin()+i);
 			}
 		}	
 		//add to closedset
 		closedset.push_back(current);
 
 		//calculate neibhours of current
-		vector<Node> neighbours = current.neighbours;
-		for (int i=0; i<neighbours.size(); i++) {
-			Node neighbour = neighbours.at(i);
+		vector<Node*> neighbours = current->neighbours;
+		for (int i=0; i<current->nneighbours; i++) {
+			Node* neighbour = neighbours.at(i);
 
 			//dont calculate neighbour because wall
-			if (neighbour.wall == 1) continue;
+			if (neighbour->wall == 1) continue;
 
 			bool inclosed = false;
 			//check neighbour not in closedset
 			for (int j=0; j<closedset.size(); j++) {
 				//dont compute if in closed set
-				if (closedset.at(j).ix == neighbour.ix && closedset.at(j).jy == neighbour.jy) {
+				if (closedset.at(j)->ix == neighbour->ix && closedset.at(j)->jy == neighbour->jy) {
 					inclosed = true;
 					continue;
 				}
 			}
 			if (inclosed) continue;
 
-			int tmpg = current.g + 1;
+			int tmpg = current->g + 1;
 
 			//check if neighbour in openset
 			bool inopen = false;
 			for (int j=0; j<openset.size(); j++) {
 				//check if better g in openset
-				if (openset.at(j).ix == neighbour.ix && openset.at(j).jy == neighbour.jy) {
+				if (openset.at(j)->ix == neighbour->ix && openset.at(j)->jy == neighbour->jy) {
 					inopen = true;
 					//tmpg is better than previous path
-					if (tmpg < neighbour.g) {
-						neighbour.g = tmpg;
+					if (tmpg < neighbour->g) {
+						neighbour->g = tmpg;
 					}
 				}
 			}
 			//better wasnt found
 			if (!inopen) {
-				neighbour.g = tmpg;
+				neighbour->g = tmpg;
 				openset.push_back(neighbour);
 			}
 
 			//calculate how far it is from the end and score node
-			neighbour.h = heuristic(neighbour, end);
-			neighbour.f = neighbour.g + neighbour.h;
+			neighbour->h = heuristic(*neighbour, *end);
+			neighbour->f = neighbour->g + neighbour->h;
 		}
 		
 	}
@@ -152,9 +170,21 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 //test harness
 int main() {
 	
+	cout << "Finding path in grid: \n";
+	cout << "\nstart\n|\nv";
+	int x=5; 
+	int y=9;
 	int grid[5][9] = {{0,0,1,0,1,1,1,1,0},{1,0,0,0,0,1,1,0,0},{0,1,0,0,0,0,0,1,1},
-		{1,1,0,0,0,1,0,0,0},{1,1,1,0,1,1,1,0,0}};
+		{1,1,0,0,0,1,0,0,0},{1,1,1,0,1,1,1 ,0,0}};
 
+	for (int i=0; i<x; i++) {
+		cout << endl;
+		for (int j=0; j<y; j++) {
+			cout << grid[i][j] << " ";
+		}
+	}
+
+	cout << "<--end\n\nCalculating path... \n(1 if found, 0 if not found): ";
 	bool result = DoesPathExist(grid);
 	cout << result << endl;
 
