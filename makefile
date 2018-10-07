@@ -2,16 +2,16 @@ CC=g++
 
 CFLAGS=-g
 
-all: Node.o findpath.o
-	$(CC) $(CFLAGS) -o findpath Node.o findpath.o
+all: Node.o AStar.o
+	$(CC) $(CFLAGS) -o AStar Node.o AStar.o
 
 Node.o: Node.cpp
 	$(CC) $(CFLAGS) -c Node.cpp
 
-findpath.o: findpath.cpp	
-	$(CC) $(CFLAGS) -c findpath.cpp
+AStar.o: AStar.cpp	
+	$(CC) $(CFLAGS) -c AStar.cpp
 
 
 clean: 
-	-rm findpath.o Node.o findpath
+	-rm AStar.o Node.o AStar 
 
