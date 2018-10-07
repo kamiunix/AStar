@@ -1,51 +1,12 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-
-using namespace std;
-
-class Node {
-	public:
-	int g, f, h;
-	int ix, jy;	//position in grid
-	int wall; 	//1 if wall
-	int cost;
-	int nneighbours;
-
-	//Node *parent only if we need to know the exact path taken
-	//ommitted Node *parent for this implementation
-	//Node *parent;
-	vector<Node*> neighbours;
-	//constructors
-	Node() : ix(-1), jy(-1), g(0), f(0), h(0), wall(-1), nneighbours(0) {}
-	Node(int i, int j, int w) : ix(i), jy(j), wall(w), g(0), f(0), h(0), nneighbours(0) {}
-
-	//adds neihbour nodes
-	template <size_t size_x, size_t size_y>
-	void addNeighbours(Node (&nodeset)[size_x][size_y]) {
-		if (ix<size_x-1) {
-			neighbours.push_back(&nodeset[ix+1][jy]);
-			nneighbours+=1;
-		}
-		if (ix>0) {
-			neighbours.push_back(&nodeset[ix-1][jy]);
-			nneighbours+=1;
-		}
-		if (jy<size_y-1) {
-			neighbours.push_back(&nodeset[ix][jy+1]);
-			nneighbours+=1;
-		}
-		if (jy>0) {
-			neighbours.push_back(&nodeset[ix][jy-1]);
-			nneighbours+=1;
-		}
-	}
-};
+#include "Node.h"
 
 using namespace std;
 
 //find distance from a to b
-int heuristic(Node a, Node b) {
+int heuristic(Node &a, Node &b) {
 	int x = a.ix - b.ix;
 	int y = a.jy - b.jy;
 	int dist = pow(x, 2) + pow(y, 2);
@@ -60,7 +21,8 @@ int heuristic(Node a, Node b) {
  */
 template <size_t size_x, size_t size_y>
 bool DoesPathExist(int (&grid)[size_x][size_y]) {
-	Node nodeset[size_x][size_y];
+	vector<vector<Node> > nodeset(size_x, vector<Node>(size_y));
+	//Node nodeset[size_x][size_y];
 	//Node openset[size_x*size_y];
 	//Node closedset[size_x*size_y];
 	vector<Node*> openset;
