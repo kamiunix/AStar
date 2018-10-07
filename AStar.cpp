@@ -7,8 +7,8 @@ using namespace std;
 
 //find distance from a to b
 int heuristic(Node &a, Node &b) {
-	int x = a.ix - b.ix;
-	int y = a.jy - b.jy;
+	int x = a.getIX() - b.getIX();
+	int y = a.getJY() - b.getJY();
 	int dist = pow(x, 2) + pow(y, 2);
 	dist = sqrt(dist);
 
@@ -52,8 +52,8 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		int best = 0;
 		for(int i = 0; i < openset.size(); i++) {
 			//node not null
-			if (openset[i]->ix > -1) {
-				if (openset.at(i)->f < openset.at(best)->f) {
+			if (openset[i]->getIX() > -1) {
+				if (openset.at(i)->getF() < openset.at(best)->getF()) {
 					best = i;
 				}
 			}
@@ -63,7 +63,7 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		Node* current = openset.at(best);
 
 		//found shortestpath to end
-		if (current->ix == end->ix && current->jy == end->jy) {
+		if (current->getIX() == end->getIX() && current->getJY() == end->getJY()) {
 			return 1;
 		}
 
@@ -72,7 +72,8 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		//remove current from openset
 		for(int i = 0; i < openset.size(); i++) {
 			//node not null
-			if (openset.at(i)->ix == current->ix && openset.at(i)->jy == current->jy) {
+			if (openset.at(i)->getIX() == current->getIX() && 
+					openset.at(i)->getJY() == current->getJY()) {
 				openset.erase(openset.begin()+i);
 			}
 		}	
@@ -80,47 +81,49 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 		closedset.push_back(current);
 
 		//calculate neibhours of current
-		vector<Node*> neighbours = current->neighbours;
-		for (int i=0; i<current->nneighbours; i++) {
+		vector<Node*> neighbours = current->getNeighbours();
+		for (int i=0; i<current->getNN(); i++) {
 			Node* neighbour = neighbours.at(i);
 
 			//dont calculate neighbour because wall
-			if (neighbour->wall == 1) continue;
+			if (neighbour->getWall() == 1) continue;
 
 			bool inclosed = false;
 			//check neighbour not in closedset
 			for (int j=0; j<closedset.size(); j++) {
 				//dont compute if in closed set
-				if (closedset.at(j)->ix == neighbour->ix && closedset.at(j)->jy == neighbour->jy) {
+				if (closedset.at(j)->getIX() == neighbour->getIX() && 
+						closedset.at(j)->getJY() == neighbour->getJY()) {
 					inclosed = true;
 					continue;
 				}
 			}
 			if (inclosed) continue;
 
-			int tmpg = current->g + 1;
+			int tmpg = current->getG() + 1;
 
 			//check if neighbour in openset
 			bool inopen = false;
 			for (int j=0; j<openset.size(); j++) {
 				//check if better g in openset
-				if (openset.at(j)->ix == neighbour->ix && openset.at(j)->jy == neighbour->jy) {
+				if (openset.at(j)->getIX() == neighbour->getIX() && 
+						openset.at(j)->getJY() == neighbour->getJY()) {
 					inopen = true;
 					//tmpg is better than previous path
-					if (tmpg < neighbour->g) {
-						neighbour->g = tmpg;
+					if (tmpg < neighbour->getG()) {
+						neighbour->setG(tmpg);
 					}
 				}
 			}
 			//better wasnt found
 			if (!inopen) {
-				neighbour->g = tmpg;
+				neighbour->setG(tmpg);
 				openset.push_back(neighbour);
 			}
 
 			//calculate how far it is from the end and score node
-			neighbour->h = heuristic(*neighbour, *end);
-			neighbour->f = neighbour->g + neighbour->h;
+			neighbour->setH(heuristic(*neighbour, *end));
+			neighbour->setF(neighbour->getG() + neighbour->getH());
 		}
 		
 	}

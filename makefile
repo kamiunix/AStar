@@ -4,6 +4,7 @@ CFLAGS=-g
 
 all: Node.o AStar.o
 	$(CC) $(CFLAGS) -o AStar Node.o AStar.o
+	-rm AStar.o Node.o
 
 Node.o: Node.cpp
 	$(CC) $(CFLAGS) -c Node.cpp
@@ -11,7 +12,9 @@ Node.o: Node.cpp
 AStar.o: AStar.cpp	
 	$(CC) $(CFLAGS) -c AStar.cpp
 
+test:
 
 clean: 
-	-rm AStar.o Node.o AStar 
+	-rm AStar 
+
 
