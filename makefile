@@ -13,6 +13,9 @@ AStar.o: AStar.cpp
 	$(CC) $(CFLAGS) -c AStar.cpp
 
 test:
+	./Astar tests/test1
+	./Astar tests/test2
+	./Astar tests/test3
 
 clean: 
 	-rm AStar 

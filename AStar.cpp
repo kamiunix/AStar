@@ -1,6 +1,8 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <vector>
+#include <typeinfo>
 #include "Node.h"
 
 using namespace std;
@@ -19,31 +21,32 @@ int heuristic(Node &a, Node &b) {
  *	@param array[size_t][size_t]
  *	@result bool path exists 1 or not 0
  */
-template <size_t size_x, size_t size_y>
-bool DoesPathExist(int (&grid)[size_x][size_y]) {
-	vector<vector<Node> > nodeset(size_x, vector<Node>(size_y));
-	//Node nodeset[size_x][size_y];
-	//Node openset[size_x*size_y];
-	//Node closedset[size_x*size_y];
+bool DoesPathExist(vector<vector<int> > (&grid)) {
+	int x = grid.size();
+	int y = grid[0].size();
+	vector<vector<Node> > nodeset(x, vector<Node>(y));
+	//Node nodeset[x][y];
+	//Node openset[x*y];
+	//Node closedset[x*y];
 	vector<Node*> openset;
 	vector<Node*> closedset;
 
 	//initialize grid array of nodes
-	for(int i=0; i<size_x; i++) {
-		for (int j=0; j<size_y; j++) {
+	for(int i=0; i<x; i++) {
+		for (int j=0; j<y; j++) {
 			Node tmp(i,j, grid[i][j]);
 			nodeset[i][j] = tmp;
 		}
 	}
 	//calculate every nodes neighbours
-	for(int i=0; i<size_x; i++) {
-		for (int j=0; j<size_y; j++) {
+	for(int i=0; i<x; i++) {
+		for (int j=0; j<y; j++) {
 			nodeset[i][j].addNeighbours(nodeset);
 		}
 	}
 
 	Node* start = &nodeset[0][0];
-	Node* end = &nodeset[size_x-1][size_y-1];
+	Node* end = &nodeset[x-1][y-1];
 
 	openset.push_back(start);
 
@@ -133,25 +136,54 @@ bool DoesPathExist(int (&grid)[size_x][size_y]) {
 }
 
 //test harness
-int main() {
-	
-	cout << "Finding path in grid: \n";
-	cout << "\nstart\n|\nv";
-	int x=5; 
-	int y=9;
-	int grid[5][9] = {{0,0,1,0,1,1,1,1,0},{1,0,0,0,0,1,1,0,0},{0,1,0,0,0,0,0,1,1},
-		{1,1,0,0,0,1,0,0,0},{1,1,1,0,1,1,1 ,0,0}};
-
-	for (int i=0; i<x; i++) {
-		cout << endl;
-		for (int j=0; j<y; j++) {
-			cout << grid[i][j] << " ";
-		}
+int main(int argc, char* argv[]) {
+	int x=0;
+	int y=0;
+	string fname;
+	if (argc < 2) {
+		cout << "No file provided. Running with default\n";
+		fname = "./tests/default";
 	}
+	else fname = argv[1];
 
-	cout << "<--end\n\nCalculating path... \n(1 if found, 0 if not found): ";
-	bool result = DoesPathExist(grid);
-	cout << result << endl;
+	string line;
+	ifstream file;
+	file.open(fname);
+	if (file.is_open()) {
+		vector<vector<int> > grid;
+		while(getline(file, line)) {
+			x=line.length();
+			grid.push_back(vector<int>());
+			//extend by 1 y
+			for(int i=0; i<line.length(); i++) {
+				if (line[i] == '0') grid[y].push_back(0);
+				else if (line[i] == '1') grid[y].push_back(1);
+			}
+			y+=1;
+		}
+		
 
-	return result;
+		file.close();
+
+		cout << "Finding path in grid: \n";
+		cout << "\nstart\n|\nv";
+
+		for (int i=0; i<y; i++) {
+			cout << endl;
+			for (int j=0; j<x; j++) {
+				cout << grid[i][j] << " ";
+			}
+		}
+
+		cout << "<--end\n\nCalculating path... \n(1 if found, 0 if not found): ";
+		bool result = DoesPathExist(grid);
+		cout << result << endl;
+
+		return result;
+
+	}
+	else {
+		cout << "File was not found.\n";
+		return -1;
+	}
 }
